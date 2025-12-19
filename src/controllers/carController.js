@@ -16,6 +16,7 @@ const { getCarPostsCount } = require('../models/postModel');
 const pool = require('../config/db');
 const path = require('path');
 const { getIO } = require('../socket');
+const { sendExoPush } = require('../utils/expoPush');
 
 // POST /api/cars
 const addCar = async (req, res, next) => {
@@ -245,6 +246,26 @@ const followCarAction = async (req, res, next) => {
       if (notificationDetails.rows.length > 0) {
         io.emit('new_notification', notificationDetails.rows[0]);
       }
+    }
+
+    // Send push notification
+    const recipientCar = await pool.query(
+      'SELECT expo_push_token FROM cars WHERE id = $1',
+      [targetCarId]
+    );
+
+    if (recipientCar.rows[0]?.expo_push_token) {
+      const actorCar = await pool.query(
+        'SELECT plate FROM cars WHERE id = $1',
+        [activeCarId]
+      );
+
+      await sendExoPush(
+        recipientCar.rows[0].expo_push_token,
+        '🚗 Naujas sekėjas',
+        `${actorCar.rows[0].plate} pradėjo sekti jus`,
+        { type: 'follow', carId: activeCarId }
+      );
     }
 
     return res.json({

@@ -19,6 +19,15 @@ const { setIO } = require('./socket');
 
 const app = express();
 
+// Globalus request loggeris
+
+app.use(express.json());
+// Globalus request loggeris (po express.json)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`, req.body);
+  next();
+});
+
 const allowedOrigin = process.env.CLIENT_ORIGIN || '*';
 
 app.use(
@@ -29,7 +38,6 @@ app.use(
   })
 );
 
-app.use(express.json());
 
 // Health
 app.get('/api/health', (req, res) => {

@@ -17,6 +17,7 @@ const pool = require('../config/db');
 const path = require('path');
 const fs = require('fs').promises;
 const { getIO } = require('../socket');
+const { sendExoPush } = require('../utils/expoPush');
 
 // POST /api/posts/create (CAR-BASED)
 const createUserPost = async (req, res, next) => {
@@ -530,6 +531,26 @@ const likePost = async (req, res, next) => {
             io.emit('new_notification', notificationDetails.rows[0]);
           }
         }
+
+        // Send push notification
+        const recipientCar = await pool.query(
+          'SELECT expo_push_token FROM cars WHERE id = $1',
+          [post.car_id]
+        );
+
+        if (recipientCar.rows[0]?.expo_push_token) {
+          const actorCar = await pool.query(
+            'SELECT plate FROM cars WHERE id = $1',
+            [carId]
+          );
+
+          await sendExoPush(
+            recipientCar.rows[0].expo_push_token,
+            '❤️ Naujas palaikymas',
+            `${actorCar.rows[0].plate} palaikino jūsų įrašą`,
+            { type: 'like', postId, carId }
+          );
+        }
       }
     }
 
@@ -662,6 +683,26 @@ const addComment = async (req, res, next) => {
 
       if (io && notificationDetails.rows.length > 0) {
         io.emit('new_notification', notificationDetails.rows[0]);
+      }
+
+      // Send push notification
+      const recipientCar = await pool.query(
+        'SELECT expo_push_token FROM cars WHERE id = $1',
+        [post.car_id]
+      );
+
+      if (recipientCar.rows[0]?.expo_push_token) {
+        const actorCar = await pool.query(
+          'SELECT plate FROM cars WHERE id = $1',
+          [carId]
+        );
+
+        await sendExoPush(
+          recipientCar.rows[0].expo_push_token,
+          '💬 Naujas komentaras',
+          `${actorCar.rows[0].plate} pakomentavo jūsų įrašą`,
+          { type: 'comment', postId, commentId: comment.id, carId }
+        );
       }
     }
 

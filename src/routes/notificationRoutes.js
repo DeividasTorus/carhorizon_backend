@@ -6,10 +6,14 @@ const {
   getNotifications,
   markAsRead,
   markAllAsRead,
+  savePushToken,
 } = require('../controllers/notificationController');
 
 // All routes require authentication
 router.use(auth);
+
+// POST /api/notifications/push-token - Save Expo push token
+router.post('/push-token', savePushToken);
 
 // GET /api/notifications - Get all notifications
 router.get('/', getNotifications);

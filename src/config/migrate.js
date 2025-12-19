@@ -19,6 +19,11 @@ async function runMigrations() {
     await pool.query(migration);
     console.log("🔄 Migration applied: title field made nullable");
 
+    // Run migration for expo push tokens
+    const expoPushMigration = fs.readFileSync(path.join(__dirname, '../../sql/migration_add_expo_push_token.sql'), 'utf8');
+    await pool.query(expoPushMigration);
+    console.log("🔔 Migration applied: expo_push_token added to cars table");
+
     console.log("🎉 Database ready!");
   } catch (err) {
     console.error("❌ Migration error:", err);

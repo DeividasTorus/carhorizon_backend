@@ -4,10 +4,12 @@ Node.js + Express + PostgreSQL backend for the CarHorizon app.
 
 ## Endpoints
 
+
 Base URL (local): http://localhost:4000/api
 
 - POST /auth/register  { email, password }
 - POST /auth/login     { email, password }
+- POST /auth/google    { accessToken }   ← Google OAuth
 - GET  /auth/me        (Authorization: Bearer <token>)
 
 - POST /cars           { plate, model? }  (auth)

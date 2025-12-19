@@ -155,8 +155,60 @@ const markAllAsRead = async (req, res, next) => {
   }
 };
 
+// POST /api/notifications/push-token - Save Expo push token
+const savePushToken = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { expoPushToken } = req.body;
+
+    if (!expoPushToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'expoPushToken is required'
+      });
+    }
+
+    // Validate Expo token format
+    if (!expoPushToken.startsWith('ExponentPushToken[')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid Expo push token format'
+      });
+    }
+
+    // Get user's active car
+    const activeCar = await getActiveCarForUser(userId);
+    if (!activeCar) {
+      return res.status(400).json({
+        success: false,
+        error: 'No active car selected'
+      });
+    }
+
+    const activeCarId = activeCar.id;
+
+    // Update car's push token
+    await pool.query(
+      'UPDATE cars SET expo_push_token = $1 WHERE id = $2',
+      [expoPushToken, activeCarId]
+    );
+
+    console.log(`✅ Push token saved for car ${activeCarId}`);
+
+    return res.json({
+      success: true,
+      message: 'Push token saved successfully'
+    });
+
+  } catch (err) {
+    console.error('savePushToken error:', err);
+    next(err);
+  }
+};
+
 module.exports = {
   getNotifications,
   markAsRead,
   markAllAsRead,
+  savePushToken,
 };
